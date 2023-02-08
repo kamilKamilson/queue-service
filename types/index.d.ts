@@ -17,6 +17,12 @@ type Queue<T> = {
   resolvedItems: T[];
 };
 
+type ResolvedItem<T> = {
+  id: string,
+  queueId: string,
+  data: T
+}
+
 type Data = Array<PromiseData<User>>;
 
 type QueueState = "INITIAL" | "FETCHING" | "FETCHED" | "END";

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { faker } from "@faker-js/faker";
 
-const TO_RESOLVE = 30;
+const TO_RESOLVE = 12;
 
 const generateData = (length: number) => {
   const data: Data = [];
@@ -21,7 +21,7 @@ const generateData = (length: number) => {
 };
 
 const resolveData = (user: User, timeout: number): Promise<User> =>
-  new Promise((resolve, reject) => {
+  new Promise((resolve) => {
     setTimeout(() => {
       resolve(user);
     }, timeout);
@@ -31,6 +31,10 @@ const App = () => {
   const [queuesNumber, setQueuesNumber] = useState(0);
   const [data, setData] = useState<Data>([]);
   const [queues, setQueues] = useState<Record<string, Queue<User>>>({});
+  const [resolvedRequests, setResolvedRequests] = useState<
+    Array<ResolvedItem<User>>
+  >([]);
+  const [time, setTime] = useState<number | string>(0);
 
   const handleChangeQueuesNumber = ({
     target,
@@ -69,8 +73,10 @@ const App = () => {
       });
     }
     lastFetchedIndex.current = 0;
+    setResolvedRequests([]);
     setData(generateData(TO_RESOLVE));
     setQueues(queues);
+    setTime(Date.now());
   };
 
   useEffect(() => {
@@ -86,6 +92,15 @@ const App = () => {
             },
           }));
           fetchData().then((item) => {
+            setResolvedRequests((prevValue) => [
+              ...prevValue,
+              {
+                id: faker.datatype.uuid(),
+                queueId: id,
+                data: item,
+              },
+            ]);
+
             setQueues((prevValue) => ({
               ...prevValue,
               [id]: {
@@ -106,6 +121,17 @@ const App = () => {
         }
       });
   }, [queues, data]);
+
+  useEffect(() => {
+    if (
+      resolvedRequests.length > 0 &&
+      resolvedRequests.length === data.length
+    ) {
+      setTime((prevValue) =>
+        ((Date.now() - Number(prevValue)) / 1000).toFixed(2)
+      );
+    }
+  }, [resolvedRequests]);
 
   return (
     <div className="p-8">
@@ -128,8 +154,44 @@ const App = () => {
         onClick={handleStartQueues}
         className="bg-purple-600 text-white px-6 py-4 font-bold rounded-md text-md hover:bg-purple-500 transition-all mt-5"
       >
-        Start Queue
+        Start Queues
       </button>
+
+      {resolvedRequests.length > 0 && (
+        <div className="flex flex-col mt-5">
+          <div className="px-4 py-5 bg-purple-100 text-center text-xl font-bold rounded-md">
+            Resolved items {resolvedRequests.length} / {data.length}
+          </div>
+          <div className="grid grid-cols-4 gap-4 py-4">
+            {resolvedRequests.map(
+              ({ id, queueId, data: { id: userId, name, email } }) => (
+                <div
+                  key={id}
+                  className="flex flex-col border p-2 mb-2 rounded-md border-gray-200 hover:border-purple-300 select-none transition-colors hover:bg-purple-50"
+                >
+                  <span className="font-bold text-xs text-gray-400">
+                    Id: {id}
+                  </span>
+                  <span className="font-bold text-xs text-gray-400">
+                    Queue id: {queueId}
+                  </span>
+                  <span className="font-bold text-xs text-gray-400">
+                    User id: {userId}
+                  </span>
+                  <span className="font-bold">{name}</span>
+                  <span className="font-light">{email}</span>
+                </div>
+              )
+            )}
+          </div>
+          {resolvedRequests.length > 0 &&
+            resolvedRequests.length === data.length && (
+              <div className="border-t border-t-gray-200 pt-3">
+                Fetching ended in: <strong>{time} s</strong>
+              </div>
+            )}
+        </div>
+      )}
 
       <div className="mt-5 grid grid-cols-4 gap-x-2">
         {Object.values(queues).map(({ id, state, resolvedItems }) => (
