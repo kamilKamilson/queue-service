@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { faker } from "@faker-js/faker";
+import ResolvedItem from "./components/ResolvedItem/ResolvedItem";
+import ResolvedItemsList from "./components/ResolvedItemsList/ResolvedItemsList";
+import QueueItemsList from "./components/QueueItemsList/QueueItemsList";
 
 const TO_RESOLVE = 12;
 
@@ -34,7 +37,6 @@ const App = () => {
   const [resolvedRequests, setResolvedRequests] = useState<
     Array<ResolvedItem<User>>
   >([]);
-  const [time, setTime] = useState<number | string>(0);
 
   const handleChangeQueuesNumber = ({
     target,
@@ -76,7 +78,6 @@ const App = () => {
     setResolvedRequests([]);
     setData(generateData(TO_RESOLVE));
     setQueues(queues);
-    setTime(Date.now());
   };
 
   useEffect(() => {
@@ -122,17 +123,6 @@ const App = () => {
       });
   }, [queues, data]);
 
-  useEffect(() => {
-    if (
-      resolvedRequests.length > 0 &&
-      resolvedRequests.length === data.length
-    ) {
-      setTime((prevValue) =>
-        ((Date.now() - Number(prevValue)) / 1000).toFixed(2)
-      );
-    }
-  }, [resolvedRequests]);
-
   return (
     <div className="p-8">
       <h1 className="font-bold text-4xl">Queue Service</h1>
@@ -158,73 +148,10 @@ const App = () => {
       </button>
 
       {resolvedRequests.length > 0 && (
-        <div className="flex flex-col mt-5">
-          <div className="px-4 py-5 bg-purple-100 text-center text-xl font-bold rounded-md">
-            Resolved items {resolvedRequests.length} / {data.length}
-          </div>
-          <div className="grid grid-cols-4 gap-4 py-4">
-            {resolvedRequests.map(
-              ({ id, queueId, data: { id: userId, name, email } }) => (
-                <div
-                  key={id}
-                  className="flex flex-col border p-2 mb-2 rounded-md border-gray-200 hover:border-purple-300 select-none transition-colors hover:bg-purple-50"
-                >
-                  <span className="font-bold text-xs text-gray-400">
-                    Id: {id}
-                  </span>
-                  <span className="font-bold text-xs text-gray-400">
-                    Queue id: {queueId}
-                  </span>
-                  <span className="font-bold text-xs text-gray-400">
-                    User id: {userId}
-                  </span>
-                  <span className="font-bold">{name}</span>
-                  <span className="font-light">{email}</span>
-                </div>
-              )
-            )}
-          </div>
-          {resolvedRequests.length > 0 &&
-            resolvedRequests.length === data.length && (
-              <div className="border-t border-t-gray-200 pt-3">
-                Fetching ended in: <strong>{time} s</strong>
-              </div>
-            )}
-        </div>
+        <ResolvedItemsList list={resolvedRequests} maxItems={data.length} />
       )}
 
-      <div className="mt-5 grid grid-cols-4 gap-x-2">
-        {Object.values(queues).map(({ id, state, resolvedItems }) => (
-          <div key={id} className="mt-5">
-            <div className="p-4 text-sm  bg-purple-100 rounded-t-md">
-              <h2 className="font-bold text-lg">Queue</h2>
-              <p>
-                Id: <span className="font-bold">{id}</span>
-              </p>
-              <p>
-                Resolved items:{" "}
-                <span className="font-bold">{resolvedItems.length}</span>
-              </p>
-              <p>
-                Status: <span className="font-bold">{state}</span>
-              </p>
-            </div>
-
-            <div className="flex flex-col p-4 rounded-b-md border-gray-200 border">
-              {resolvedItems.map(({ id, name, email }) => (
-                <div
-                  key={id}
-                  className="flex flex-col border-b pb-2 mb-2 border-b-gray-200"
-                >
-                  <span className="font-bold text-xs text-gray-400">{id}</span>
-                  <span className="font-bold">{name}</span>
-                  <span className="font-light">{email}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <QueueItemsList list={queues} />
     </div>
   );
 };

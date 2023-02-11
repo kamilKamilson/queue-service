@@ -1,0 +1,7 @@
+.wrapper {
+  @apply flex flex-col border p-2 mb-2 rounded-md border-gray-200 hover:border-purple-300 select-none transition-colors hover:bg-purple-50;
+}
+
+.lightText {
+  @apply font-bold text-xs text-gray-400;
+}
